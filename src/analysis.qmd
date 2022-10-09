@@ -1,0 +1,165 @@
+---
+title: "Salivary ductal carcinoma: demographics, presentation, treatment, and outcome"
+author: "Minsoo Kim"
+date: "10/09/2022"
+format:
+  html:
+    code-fold: true
+jupyter: julia-1.8
+---
+
+```{julia}
+using XLSX, DataFrames, Statistics, PrettyTables, Statistics
+df = DataFrame(XLSX.readtable("../data/salivaryductca.xlsx", 1))
+n = size(df, 1)
+se(n, p) = sqrt(p * (1 - p) / n);
+```
+
+## Demographics
+```{julia}
+#| echo: false
+using Markdown
+Markdown.parse("""
+Salivary ductal carcinoma (SDC) is a rare, aggressive type of salivary gland cancer. Here, we conduct a retrospective cohort study by examining <u>$(size(df, 1)) patients</u> with SDC who have been treated at UCLA. $(count(==("M"), df[!, :sex])) males and  $(count(==("F"), df[!, :sex])) females of age $(extrema(df[!, "age at diagnosis"])[1]) to $(extrema(df[!, "age at diagnosis"])[2]) (median $(quantile(df[!, "age at diagnosis"], 0.5))) were treated for SDC. Of these, $(count(==(1), df[!, "smoking"])) and $(count(==(1), df[!, "alcohol"])) were positive for smoking and alcohol status, respectively. Follow-up varied from $(extrema(df[!, "years to outcome"])[1]) to $(extrema(df[!, "years to outcome"])[2]) years (median $(quantile(df[!, "years to outcome"], 0.5))) and data was right censored. For further descriptive statistics on demographics, please see Table 1. We note that standard errors are large in our proportion estimates given relatively limited sample size.
+""")
+```
+
+```{julia}
+#| label: table-1
+#| tbl-cap: something.
+cov = [
+    "Age at diagnosis" "$(round(mean(df[!, "age at diagnosis"]), digits = 2)) ± $(round(std(df[!, "age at diagnosis"]), digits = 2))";
+    "Sex" ""; 
+    "Male" "$(count(==("M"), df[!, "sex"])) ($(round(count(==("M"), df[!,       "sex"]) / n, digits = 2)) ± $(round(se(n, count(==("M"), df[!, "sex"]) / n), digits = 3)))";
+    "Female" "$(count(==("F"), df[!, "sex"])) ($(round(count(==("F"), df[!,       "sex"]) / n, digits = 2)) ± $(round(se(n, count(==("F"), df[!, "sex"]) / n), digits = 3)))";
+    "Smoking" ""; 
+    "Positive" "$(count(==(1), df[!, "smoking"])) ($(round(count(==(1), df[!, "smoking"]) / n, digits = 2)) ± $(round(se(n, count(==(1), df[!, "smoking"]) / n), digits = 3)))";
+    "Negative" "$(count(==(0), df[!, "smoking"])) ($(round(count(==(0), df[!, "smoking"]) / n, digits = 2)) ± $(round(se(n, count(==(0), df[!, "smoking"]) / n), digits = 3)))";
+    "Alcohol" ""; 
+    "Positive" "$(count(==(1), df[!, "alcohol"])) ($(round(count(==(1), df[!, "alcohol"]) / n, digits = 2)) ± $(round(se(n, count(==(1), df[!, "alcohol"]) / n), digits = 3)))";
+    "Negative" "$(count(==(0), df[!, "alcohol"])) ($(round(count(==(0), df[!, "alcohol"]) / n, digits = 2)) ± $(round(se(n, count(==(0), df[!, "alcohol"]) / n), digits = 3)))"
+    ]
+
+pretty_table(
+    cov; 
+    header = ["Covariate", "N (proportion ± se)"],
+    formatters = ft_printf("%5.2f", 1:2),
+    highlighters = Highlighter((cov, i, j) -> (i in [1, 2, 5, 8]), 
+        crayon"fg:white bold bg:dark_gray"), 
+    tf = tf_unicode_rounded)
+```
+**Table 1**. Descriptive statistics for patient demographics, namely age, sex, smoking and alcohol status. Proportion estimate with its standard error are shown in parentheses, except for age at diagnosis, which shows mean estimate and its standard error. 
+
+## Presentation
+```{julia}
+#| echo: false
+using Markdown
+Markdown.parse("""
+ Parotid gland was the most common tumor site with $(count(==("parotid"), df[!, "site"])) cases and submandibular gland the next most common with $(count(==("submandibular gland"), df[!, "site"])). Of 49 cases, $(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"])) were positive for carcinoma ex-plemorphic adenoma, $(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"])) negative, and $(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"])) unknown. $(count(==("4b"), df[!, "T stage"]) + count(==("4a"), df[!, "T stage"]) + count(==(4), df[!, "T stage"]) + count(==(3), df[!, "T stage"])) cases presented with T3/4 disease. $(count(==("2b"), df[!, "N stage"]) + count(==("2c"), df[!, "N stage"]) + count(==("3b"), df[!, "N stage"])) cases had more than 2 positive lymph nodes (≥ stage N2b), and $(count(==(1), df[!, "M stage"])) cases presented with distant metastasis. Perineural invasion was positive for $(count(==("yes"), df[!, "perineural invasion"])) out of $(count(==("yes"), df[!, "perineural invasion"]) + count(==("no"), df[!, "perineural invasion"])) cases with known status, lymphovascular invasion was positive for $(count(==("yes"), df[!, "lymphovascular invasion"])) out of $(count(==("yes"), df[!, "lymphovascular invasion"]) + count(==("no"), df[!, "lymphovascular invasion"])) cases with known status, ERBB2 was positive for $(count(==("positive"), df[!, "her2 status"])) out of $(count(==("positive"), df[!, "her2 status"]) + count(==("negative"), df[!, "her2 status"])) cases with known status, and finally extracapsular spread was positive for $(count(==("yes"), df[!, "extracapsular spread"])) out of $(count(==("yes"), df[!, "extracapsular spread"]) + count(==("no"), df[!, "extracapsular spread"])) cases with known status. For further descriptive statistics on presentation, please see Table 2. We note that standard errors are large in our proportion estimates given relatively limited sample size.
+""")
+```
+
+```{julia}
+#| label: table-2
+#| tbl-cap: something.
+cov = [
+    "Primary tumor site" ""; 
+    "Parotid gland" "$(count(==("parotid"), df[!, "site"])) ($(round(count(==("parotid"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("parotid"), df[!, "site"]) / n), digits = 3)))";
+    "Submandibular gland" "$(count(==("submandibular gland"), df[!, "site"])) ($(round(count(==("submandibular gland"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("submandibular gland"), df[!, "site"]) / n), digits = 3)))";
+    "Parapharyngeal space" "$(count(==("parapharyngeal space"), df[!, "site"])) ($(round(count(==("parapharyngeal space"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("parapharyngeal space"), df[!, "site"]) / n), digits = 3)))";
+    "Hard palate" "$(count(==("hard palate"), df[!, "site"])) ($(round(count(==("hard palate"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("hard palate"), df[!, "site"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "site"])) ($(round(count(==("unknown"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "site"]) / n), digits = 3)))";
+    "Carcinoma ex pleomorphic adenoma" ""; 
+    "Yes" "$(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"])) ($(round(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n, digits = 2)) ± $(round(se(n, count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n), digits = 3)))";
+    "No" "$(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"])) ($(round(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n, digits = 2)) ± $(round(se(n, count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"])) ($(round(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n), digits = 3)))";
+    "T stage" ""; 
+    "T0" "$(count(==(0), df[!, "T stage"])) ($(round(count(==(0), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==(0), df[!, "T stage"]) / n), digits = 3)))";
+    "T1" "$(count(==(1), df[!, "T stage"])) ($(round(count(==(1), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==(1), df[!, "T stage"]) / n), digits = 3)))";
+    "T2" "$(count(==(2), df[!, "T stage"])) ($(round(count(==(2), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==(2), df[!, "T stage"]) / n), digits = 3)))";
+    "T3" "$(count(==(3), df[!, "T stage"])) ($(round(count(==(3), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==(3), df[!, "T stage"]) / n), digits = 3)))";
+    "T4" "$(count(==(4), df[!, "T stage"])) ($(round(count(==(4), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==(4), df[!, "T stage"]) / n), digits = 3)))";
+    "T4a" "$(count(==("4a"), df[!, "T stage"])) ($(round(count(==("4a"), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==("4a"), df[!, "T stage"]) / n), digits = 3)))";
+    "T4b" "$(count(==("4b"), df[!, "T stage"])) ($(round(count(==("4b"), df[!, "T stage"]) / n, digits = 2)) ± $(round(se(n, count(==("4b"), df[!, "T stage"]) / n), digits = 3)))";
+    "N stage" ""; 
+    "N0" "$(count(==(0), df[!, "N stage"])) ($(round(count(==(0), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==(0), df[!, "N stage"]) / n), digits = 3)))";
+    "N1" "$(count(==(1), df[!, "N stage"])) ($(round(count(==(1), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==(1), df[!, "N stage"]) / n), digits = 3)))";
+    "N2a" "$(count(==("2a"), df[!, "N stage"])) ($(round(count(==("2a"), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==("2a"), df[!, "N stage"]) / n), digits = 3)))";
+    "N2b" "$(count(==("2b"), df[!, "N stage"])) ($(round(count(==("2b"), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==("2b"), df[!, "N stage"]) / n), digits = 3)))";
+    "N2c" "$(count(==("2c"), df[!, "N stage"])) ($(round(count(==("2c"), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==("2c"), df[!, "N stage"]) / n), digits = 3)))";
+    "N3b" "$(count(==("3b"), df[!, "N stage"])) ($(round(count(==("3b"), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==("3b"), df[!, "N stage"]) / n), digits = 3)))";
+    "Nx" "$(count(==("X"), df[!, "N stage"])) ($(round(count(==("X"), df[!, "N stage"]) / n, digits = 2)) ± $(round(se(n, count(==("X"), df[!, "N stage"]) / n), digits = 3)))";
+    "M stage" ""; 
+    "Yes" "$(count(==(1), df[!, "M stage"])) ($(round(count(==(1), df[!, "M stage"]) / n, digits = 2)) ± $(round(se(n, count(==(1), df[!, "M stage"]) / n), digits = 3)))";
+    "No" "$(count(==(0), df[!, "M stage"])) ($(round(count(==(0), df[!, "M stage"]) / n, digits = 2)) ± $(round(se(n, count(==(0), df[!, "M stage"]) / n), digits = 3)))";
+    "Perineural invasion" ""; 
+    "Yes" "$(count(==("yes"), df[!, "perineural invasion"])) ($(round(count(==("yes"), df[!, "perineural invasion"]) / n, digits = 2)) ± $(round(se(n, count(==("yes"), df[!, "perineural invasion"]) / n), digits = 3)))";
+    "No" "$(count(==("no"), df[!, "perineural invasion"])) ($(round(count(==("no"), df[!, "perineural invasion"]) / n, digits = 2)) ± $(round(se(n, count(==("no"), df[!, "perineural invasion"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "perineural invasion"])) ($(round(count(==("unknown"), df[!, "perineural invasion"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "perineural invasion"]) / n), digits = 3)))";
+    "Lymphovascular invasion" ""; 
+    "Yes" "$(count(==("yes"), df[!, "lymphovascular invasion"])) ($(round(count(==("yes"), df[!, "lymphovascular invasion"]) / n, digits = 2)) ± $(round(se(n, count(==("yes"), df[!, "lymphovascular invasion"]) / n), digits = 3)))";
+    "No" "$(count(==("no"), df[!, "lymphovascular invasion"])) ($(round(count(==("no"), df[!, "lymphovascular invasion"]) / n, digits = 2)) ± $(round(se(n, count(==("no"), df[!, "lymphovascular invasion"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "lymphovascular invasion"])) ($(round(count(==("unknown"), df[!, "lymphovascular invasion"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "lymphovascular invasion"]) / n), digits = 3)))";
+    "ERBB2 status" ""; 
+    "Positive" "$(count(==("positive"), df[!, "her2 status"])) ($(round(count(==("positive"), df[!, "her2 status"]) / n, digits = 2)) ± $(round(se(n, count(==("positive"), df[!, "her2 status"]) / n), digits = 3)))";
+    "Negative" "$(count(==("negative"), df[!, "her2 status"])) ($(round(count(==("negative"), df[!, "her2 status"]) / n, digits = 2)) ± $(round(se(n, count(==("negative"), df[!, "her2 status"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "her2 status"])) ($(round(count(==("unknown"), df[!, "her2 status"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "her2 status"]) / n), digits = 3)))";
+    "Extracapsular spread" ""; 
+    "Yes" "$(count(==("yes"), df[!, "extracapsular spread"])) ($(round(count(==("yes"), df[!, "extracapsular spread"]) / n, digits = 2)) ± $(round(se(n, count(==("yes"), df[!, "extracapsular spread"]) / n), digits = 3)))";
+    "No" "$(count(==("no"), df[!, "extracapsular spread"])) ($(round(count(==("no"), df[!, "extracapsular spread"]) / n, digits = 2)) ± $(round(se(n, count(==("no"), df[!, "extracapsular spread"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "extracapsular spread"])) ($(round(count(==("unknown"), df[!, "extracapsular spread"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "extracapsular spread"]) / n), digits = 3)))";
+    ]
+
+pretty_table(
+    cov; 
+    header = ["Covariate", "N (proportion ± se)"],
+    formatters = ft_printf("%5.2f", 1:2),
+    highlighters = Highlighter((cov, i, j) -> (i in [1, 2, 5, 8]), 
+        crayon"fg:white bold bg:dark_gray"), 
+    tf = tf_unicode_rounded)
+```
+**Table 2**. Descriptive statistics for patient presentation. Proportion estimate with its standard error are shown in parentheses. 
+
+## Treatment
+```{julia}
+#| echo: false
+using Markdown
+Markdown.parse("""
+Of 49 cases, $(count(==("surgical resection"), df[!, :procedure])) underwent surgical resection and $(count(==("biopsy only"), df[!, :procedure])) underwent biopsy only. $(count(==("CXRT"), df[!, "adjuvant treatment"])) cases received both chemo and radiation therapy as postoperative adjuvant treatment, while $(count(==("chemo only"), df[!, "adjuvant treatment"])) and $(count(==("radiation only"), df[!, "adjuvant treatment"])) received either chemo or radiation therapy only, respectively. $(count(==("yes"), skipmissing(df[!, "facial nerve sacrifice"]))) cases of $(count(==("yes"), skipmissing(df[!, "facial nerve sacrifice"])) + count(==("no"), skipmissing(df[!, "facial nerve sacrifice"]))) with known status required facial nerve sacrifice.  For further descriptive statistics on treatment, please see Table 3. We note that standard errors are large in our proportion estimates given relatively limited sample size.
+""")
+```
+
+```{julia}
+#| label: table-3
+#| tbl-cap: something.
+cov = [
+    "Procedure" ""; 
+    "Surgical resection" "$(count(==("surgical resection"), df[!, "procedure"])) ($(round(count(==("surgical resection"), df[!, "procedure"]) / n, digits = 2)) ± $(round(se(n, count(==("surgical resection"), df[!, "procedure"]) / n), digits = 3)))";
+    "Biopsy only" "$(count(==("biopsy only"), df[!, "procedure"])) ($(round(count(==("biopsy only"), df[!, "procedure"]) / n, digits = 2)) ± $(round(se(n, count(==("biopsy only"), df[!, "procedure"]) / n), digits = 3)))";
+    "Adjuvant treatment" ""; 
+    "CXRT" "$(count(==("CXRT"), df[!, "adjuvant treatment"])) ($(round(count(==("CXRT"), df[!, "adjuvant treatment"]) / n, digits = 2)) ± $(round(se(n, count(==("CXRT"), df[!, "adjuvant treatment"]) / n), digits = 3)))";
+    "Radiation only" "$(count(==("radiation only"), df[!, "adjuvant treatment"])) ($(round(count(==("radiation only"), df[!, "adjuvant treatment"]) / n, digits = 2)) ± $(round(se(n, count(==("radiation only"), df[!, "adjuvant treatment"]) / n), digits = 3)))";
+    "Chemotherapy only" "$(count(==("chemo only"), df[!, "adjuvant treatment"])) ($(round(count(==("chemo only"), df[!, "adjuvant treatment"]) / n, digits = 2)) ± $(round(se(n, count(==("chemo only"), df[!, "adjuvant treatment"]) / n), digits = 3)))";
+    "None" "$(count(==("none"), df[!, "adjuvant treatment"])) ($(round(count(==("none"), df[!, "adjuvant treatment"]) / n, digits = 2)) ± $(round(se(n, count(==("none"), df[!, "adjuvant treatment"]) / n), digits = 3)))";
+    "Unknown" "$(count(==("unknown"), df[!, "adjuvant treatment"])) ($(round(count(==("unknown"), df[!, "adjuvant treatment"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "adjuvant treatment"]) / n), digits = 3)))";
+    "Facial nerve sacrifice" ""; 
+    "Yes" "$(count(==("yes"), skipmissing(df[!, "facial nerve sacrifice"]))) ($(round(count(==("yes"), skipmissing(df[!, "facial nerve sacrifice"])) / n, digits = 2)) ± $(round(se(n, count(==("yes"), skipmissing(df[!, "facial nerve sacrifice"])) / n), digits = 3)))";
+    "No" "$(count(==("no"), skipmissing(df[!, "facial nerve sacrifice"]))) ($(round(count(==("no"), skipmissing(df[!, "facial nerve sacrifice"])) / n, digits = 2)) ± $(round(se(n, count(==("no"), skipmissing(df[!, "facial nerve sacrifice"])) / n), digits = 3)))";
+    "Unknown" "$(sum(ismissing.(df[!, "facial nerve sacrifice"]))) ($(round(sum(ismissing.(df[!, "facial nerve sacrifice"])) / n, digits = 2)) ± $(round(se(n, sum(ismissing.(df[!, "facial nerve sacrifice"])) / n), digits = 3)))";
+    ]
+
+pretty_table(
+    cov; 
+    header = ["Covariate", "N (proportion ± se)"],
+    formatters = ft_printf("%5.2f", 1:2),
+    highlighters = Highlighter((cov, i, j) -> (i in [1, 2, 5, 8]), 
+        crayon"fg:white bold bg:dark_gray"), 
+    tf = tf_unicode_rounded)
+```
+**Table 3**. Descriptive statistics for patient treatment. Proportion estimate with its standard error are shown in parentheses. 
+
+## Survival outcome
+- Univariable survival analysis
+- Multivariable survival analysis
+- Kaplan-Meier curve
+- We then investigated factors associated with recurrence by logistic regression and Fisher's exact test.
