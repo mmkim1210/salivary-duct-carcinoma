@@ -55,7 +55,7 @@ pretty_table(
 #| echo: false
 using Markdown
 Markdown.parse("""
- Parotid gland was the most common tumor site with $(count(==("parotid"), df[!, "site"])) cases and submandibular gland the next most common with $(count(==("submandibular gland"), df[!, "site"])). Of 49 cases, $(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"])) were positive for carcinoma ex-plemorphic adenoma, $(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"])) negative, and $(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"])) unknown. $(count(==("4b"), df[!, "T stage"]) + count(==("4a"), df[!, "T stage"]) + count(==(4), df[!, "T stage"]) + count(==(3), df[!, "T stage"])) cases presented with T3/4 disease. $(count(==("2b"), df[!, "N stage"]) + count(==("2c"), df[!, "N stage"]) + count(==("3b"), df[!, "N stage"])) cases had more than 2 positive lymph nodes (≥ stage N2b), and $(count(==(1), df[!, "M stage"])) cases presented with distant metastasis. Perineural invasion was positive for $(count(==("yes"), df[!, "perineural invasion"])) out of $(count(==("yes"), df[!, "perineural invasion"]) + count(==("no"), df[!, "perineural invasion"])) cases with known status, lymphovascular invasion was positive for $(count(==("yes"), df[!, "lymphovascular invasion"])) out of $(count(==("yes"), df[!, "lymphovascular invasion"]) + count(==("no"), df[!, "lymphovascular invasion"])) cases with known status, ERBB2 was positive for $(count(==("positive"), df[!, "her2 status"])) out of $(count(==("positive"), df[!, "her2 status"]) + count(==("negative"), df[!, "her2 status"])) cases with known status, and finally extracapsular spread was positive for $(count(==("yes"), df[!, "extracapsular spread"])) out of $(count(==("yes"), df[!, "extracapsular spread"]) + count(==("no"), df[!, "extracapsular spread"])) cases with known status. For further descriptive statistics on presentation, please see Table 2. We note that standard errors are large in our proportion estimates given relatively limited sample size.
+ Parotid gland was the most common tumor site with $(count(==("parotid"), df[!, "site"])) cases and submandibular gland the next most common with $(count(==("submandibular gland"), df[!, "site"])). Of 49 cases, $(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"])) were positive for carcinoma ex-pleomorphic adenoma, $(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"])) negative, and $(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"])) unknown. $(count(==("4b"), df[!, "T stage"]) + count(==("4a"), df[!, "T stage"]) + count(==(4), df[!, "T stage"]) + count(==(3), df[!, "T stage"])) cases presented with T3/4 disease. $(count(==("2b"), df[!, "N stage"]) + count(==("2c"), df[!, "N stage"]) + count(==("3b"), df[!, "N stage"])) cases had more than 2 positive lymph nodes (≥ stage N2b), and $(count(==(1), df[!, "M stage"])) cases presented with distant metastasis. Perineural invasion was positive for $(count(==("yes"), df[!, "perineural invasion"])) out of $(count(==("yes"), df[!, "perineural invasion"]) + count(==("no"), df[!, "perineural invasion"])) cases with known status, lymphovascular invasion was positive for $(count(==("yes"), df[!, "lymphovascular invasion"])) out of $(count(==("yes"), df[!, "lymphovascular invasion"]) + count(==("no"), df[!, "lymphovascular invasion"])) cases with known status, ERBB2 was positive for $(count(==("positive"), df[!, "her2 status"])) out of $(count(==("positive"), df[!, "her2 status"]) + count(==("negative"), df[!, "her2 status"])) cases with known status, and finally extracapsular spread was positive for $(count(==("yes"), df[!, "extracapsular spread"])) out of $(count(==("yes"), df[!, "extracapsular spread"]) + count(==("no"), df[!, "extracapsular spread"])) cases with known status. For further descriptive statistics on presentation, please see Table 2. We note that standard errors are large in our proportion estimates given relatively limited sample size.
 """)
 ```
 
@@ -69,7 +69,7 @@ cov = [
     "Parapharyngeal space" "$(count(==("parapharyngeal space"), df[!, "site"])) ($(round(count(==("parapharyngeal space"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("parapharyngeal space"), df[!, "site"]) / n), digits = 3)))";
     "Hard palate" "$(count(==("hard palate"), df[!, "site"])) ($(round(count(==("hard palate"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("hard palate"), df[!, "site"]) / n), digits = 3)))";
     "Unknown" "$(count(==("unknown"), df[!, "site"])) ($(round(count(==("unknown"), df[!, "site"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "site"]) / n), digits = 3)))";
-    "Carcinoma ex pleomorphic adenoma" ""; 
+    "Carcinoma ex-pleomorphic adenoma" ""; 
     "Yes" "$(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"])) ($(round(count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n, digits = 2)) ± $(round(se(n, count(==("yes"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n), digits = 3)))";
     "No" "$(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"])) ($(round(count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n, digits = 2)) ± $(round(se(n, count(==("no"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n), digits = 3)))";
     "Unknown" "$(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"])) ($(round(count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n, digits = 2)) ± $(round(se(n, count(==("unknown"), df[!, "Carcinoma ex-pleomorphic adenoma"]) / n), digits = 3)))";
@@ -159,7 +159,58 @@ pretty_table(
 **Table 3**. Descriptive statistics for patient treatment. Proportion estimate with its standard error are shown in parentheses. 
 
 ## Survival outcome
-- Univariable survival analysis
-- Multivariable survival analysis
+Cox proportional hazards models were fit to assess the effects of different covariates on overall survival. Given limited sample size, we first tested individual covariates one at a time. Then jointly tested those that show trend of significance (i.e. P < 0.1). The results of fitting univariable and multivariable models are shown in Table 4 and 5, respectively. Of note, age was mean centered and standardized and for each covariate, samples with unknown values were removed when testing its effect. Statistical analyses were conducted using Survival.jl julia package.
+
+```{julia}
+#| label: table-4
+#| tbl-cap: something.
+model = [
+    "procedure (surgical resection)" -1.62 0.83 0.051
+    "age" 0.18 0.39 0.64
+    "sex (male)" -0.11 0.89 0.88
+    "smoking" 1.19 0.81 0.15
+    "alcohol" 0.733 0.75 0.33
+    "metastasis" 1.63 0.71 0.02
+    "site (parotid)" 1.04 1.07 0.33
+    "T stage (>2)" 1.16 0.82 0.16
+    "N stage (≥2)" 1.47 0.84 0.08
+    "carcinoma ex-pleomorphic adenoma" 0.65 1.24 0.61
+    "perineural invasion" -0.01 0.87 1.0
+    "extracapsular spread" 1.01 0.93 0.28
+    "Lymphovascular invasion" 0.43 0.77 0.57
+    "ERBB2 status" 0.01 0.67 0.99
+    "Facial nerve sacrifice" -1.25 1.10 0.25
+    ]
+
+pretty_table(
+    model; 
+    header = ["Covariate", "Effect size (log HR)", "Standard error", "P value"],
+    tf = tf_unicode_rounded)
+```
+**Table 4**. Effect of individual covariates on overall survival when fitting a univariable Cox proportional hazards model.
+
+```{julia}
+#| label: table-5
+#| tbl-cap: something.
+model = [
+    "procedure (surgical resection)" -1.23 1.01 0.22
+    "metastasis" 0.99 0.83 0.34
+    "N stage (≥2)" 1.49 0.90 0.10
+    ]
+
+pretty_table(
+    model; 
+    header = ["Covariate", "Effect size (log HR)", "Standard error", "P value"],
+    tf = tf_unicode_rounded)
+```
+**Table 5**. Effect of multiple covariates on overall survival when modelling them jointly with a multivariable Cox proportional hazards model.
+
+Unlike in prior studies, age, sex, primary tumor site, vascular invasion, perineural invasion, facial nerve involvement (facial nerve sacrifice being its proxy), and extracapsular spread were not associated with overall survival outcome. Meanwhile, N stage higher than N1 showed consistent trend of being negatively associated with overall survival both in univariable and multivariable models. We note that overall survival probability at 3 years was 0.88 (according to the Kaplan-Meier method) in our study, suggesting high survival rate than previously suggested by prior work.
+
+TODO:
+
 - Kaplan-Meier curve
+- Maybe log-rank test as an alternative to univariable survival model
+- Maybe look at disease-free survival
+- Maybe calculate median overall survival
 - We then investigated factors associated with recurrence by logistic regression and Fisher's exact test.
