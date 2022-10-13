@@ -9,7 +9,7 @@ jupyter: julia-1.8
 ---
 
 ```{julia}
-using XLSX, DataFrames, Statistics, PrettyTables, Statistics
+using XLSX, DataFrames, Statistics, PrettyTables, Statistics, CairoMakie, Survival, HypothesisTests
 df = DataFrame(XLSX.readtable("../data/salivaryductca.xlsx", 1))
 n = size(df, 1)
 se(n, p) = sqrt(p * (1 - p) / n);
@@ -177,9 +177,9 @@ model = [
     "carcinoma ex-pleomorphic adenoma" 0.65 1.24 0.61
     "perineural invasion" -0.01 0.87 1.0
     "extracapsular spread" 1.01 0.93 0.28
-    "Lymphovascular invasion" 0.43 0.77 0.57
+    "lymphovascular invasion" 0.43 0.77 0.57
     "ERBB2 status" 0.01 0.67 0.99
-    "Facial nerve sacrifice" -1.25 1.10 0.25
+    "facial nerve sacrifice" -1.25 1.10 0.25
     ]
 
 pretty_table(
@@ -205,12 +205,74 @@ pretty_table(
 ```
 **Table 5**. Effect of multiple covariates on overall survival when modelling them jointly with a multivariable Cox proportional hazards model.
 
-Unlike in prior studies, age, sex, primary tumor site, vascular invasion, perineural invasion, facial nerve involvement (facial nerve sacrifice being its proxy), and extracapsular spread were not associated with overall survival outcome. Meanwhile, N stage higher than N1 showed consistent trend of being negatively associated with overall survival both in univariable and multivariable models. We note that overall survival probability at 3 years was 0.88 (according to the Kaplan-Meier method) in our study, suggesting high survival rate than previously suggested by prior work.
+Unlike in prior studies, age, sex, primary tumor site, vascular invasion, perineural invasion, facial nerve involvement (facial nerve sacrifice being its proxy), and extracapsular spread were not associated with overall survival outcome. Meanwhile, N stage higher than N1 showed consistent trend of being negatively associated with overall survival both in univariable and multivariable models. We note that overall survival probability at 3 years was 0.88 and median overall survival was 12 years (according to the Kaplan-Meier method in Figure 1) in our study, suggesting high survival rate than previously suggested by prior work.
+
+```{julia}
+#| label: fig-1
+#| fig-cap: Kaplan-Meier curve. Overall survival probability at 3 years was 0.88 and median overall survival was 12 years.
+rename!(df, 
+    ["age at diagnosis", "facial nerve sacrifice", "adjuvant treatment",
+    "Carcinoma ex-pleomorphic adenoma", "perineural invasion", "her2 status", 
+    "lymphovascular invasion", "extracapsular spread", "T stage", "N stage",
+    "M stage", "years to outcome", "death age"] 
+    .=> ["age", "cn7", "adjuvant", "pleomorphic", "pni", "her2", "vascular", 
+    "extracapsular", "T", "N", "M", "years", "death"])
+model = fit(KaplanMeier, Float64.(df.years), df.death .!= "n/a") 
+t = deepcopy(model.times)
+s = deepcopy(model.survival)
+pushfirst!(t, 0)
+pushfirst!(s, 1)
+
+for i in 3:length(t)
+    if s[i] < s[i - 1]
+        t[i - 1] = t[i]
+    end
+end
+set_theme!(font = "Arial")
+f = Figure()
+ax = Axis(f[1, 1])
+lines!(ax, t, s)
+hidedecorations!(ax, ticklabels = false, ticks = false)
+ax.yticks = 0:0.2:1.0
+ax.xticks = 0:2:13
+ylims!(ax, -0.05, 1.05)
+Label(f[2, 1], text = "years", tellwidth = false)
+Label(f[1, 0], text = "survival probability", rotation = pi / 2, tellheight = false)
+colsize!(f.layout, 1, Aspect(1, 1))
+f
+```
+
+
+```{julia}
+#| label: table-6
+#| tbl-cap: something.
+model = [
+    "procedure (surgical resection)" 1.0
+    "age" 0.33
+    "sex (male)" 0.32
+    "smoking" 1.0
+    "alcohol" 0.88
+    "metastasis" 0.80
+    "site (parotid)" 1.0
+    "T stage (>2)" 0.70
+    "N stage (≥2)" 1.0
+    "carcinoma ex-pleomorphic adenoma" 0.77
+    "perineural invasion" 1.0
+    "extracapsular spread" 0.63
+    "lymphovascular invasion" 1.0
+    "ERBB2 status" 0.47
+    "facial nerve sacrifice" 1.0
+    ]
+
+pretty_table(
+    model; 
+    header = ["Covariate", "P value"],
+    tf = tf_unicode_rounded)
+```
+**Table 6**. Covariates associated with recurrence. There were 8 cases for whom recurrence occurred. Continuous covariates were tested using Welch's t-test and categorical covariates were assessed via Fisher's exact test.
 
 TODO:
 
-- Kaplan-Meier curve
+- Add confidence band to Kaplan-Meier curve and add censoring marks
 - Maybe log-rank test as an alternative to univariable survival model
 - Maybe look at disease-free survival
-- Maybe calculate median overall survival
-- We then investigated factors associated with recurrence by logistic regression and Fisher's exact test.
